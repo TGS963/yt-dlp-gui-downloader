@@ -31,13 +31,21 @@ def main(link, path):
         rescode.append(i[0])
 
     jpg_data = requests.get(videoinfo['thumbnail']).content
+    
+    code = ''
+    if "shorts" in link:
+        code = link[link.find("shorts")+7:]
+    else:
+        code = link[link.find("?v=")+3:]
+    jpg_data = requests.get("https://i.ytimg.com/vi/"+code+"/maxresdefault.jpg").content        
+
     pil_image = Image.open(io.BytesIO(jpg_data))
     pil_image = pil_image.resize((480,270), resample=Image.Resampling.BICUBIC)
     png_bio = io.BytesIO()
     pil_image.save(png_bio, format="PNG")
     png_data = png_bio.getvalue()
-    
     sg.theme('Black')
+    
     elements = [
         [
             sg.Image(data=png_data, key="thumbnail", size=(480,270)),
@@ -55,9 +63,8 @@ def main(link, path):
         ],
     ]
     layout = [[sg.Column(elements, element_justification='c')]] 
-
+    
     window = sg.Window("YouTube Downloader", layout, return_keyboard_events=True, icon='C:/Users/ghosh/OneDrive/Documents/progams/yt-dlp-gui-downloader/Papirus-Team-Papirus-Apps-Youtube.ico')
-
 
     while True:
         event, values = window.read()
@@ -72,7 +79,7 @@ def main(link, path):
             t.start()
         elif event == "Audio Only":
             print("Download Started, Please do not click start again...")
-            t = threading.Thread(target=Download,args=("yt-dlp -f bestaudio --embed-subs --embed-metadata --progress --no-mtime -q " + link,values["-FOLDER-"],))
+
             t.start()
 
     window.close()
