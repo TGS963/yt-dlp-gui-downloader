@@ -1,5 +1,3 @@
-# image_browser.py
-
 import io
 import PySimpleGUI as sg
 import os
@@ -20,6 +18,7 @@ def Download(cmd, path):
 
 def main(link, path):
     videoinfo = json.loads(os.popen("yt-dlp -j " + link).read())
+    
     videoresinfo = [] #Storing raw resolution info here
     rescode = [] #Storing video codes here
     resinfo = [] #Storing other info to show here
@@ -30,15 +29,7 @@ def main(link, path):
         resinfo.append(i[2] + " " + i[1] + " " + i[3] + "FPS")
         rescode.append(i[0])
 
-    jpg_data = requests.get(videoinfo['thumbnail']).content
-    
-    code = ''
-    if "shorts" in link:
-        code = link[link.find("shorts")+7:]
-    else:
-        code = link[link.find("?v=")+3:]
-    jpg_data = requests.get("https://i.ytimg.com/vi/"+code+"/maxresdefault.jpg").content        
-
+    jpg_data = requests.get(videoinfo['thumbnail']).content    
     pil_image = Image.open(io.BytesIO(jpg_data))
     pil_image = pil_image.resize((480,270), resample=Image.Resampling.BICUBIC)
     png_bio = io.BytesIO()
