@@ -70,7 +70,7 @@ def main(link, path):
             t.start()
         elif event == "Audio Only":
             print("Download Started, Please do not click start again...")
-
+            t = threading.Thread(target=Download,args=("yt-dlp -f bestaudio --embed-subs --embed-metadata --progress --no-mtime -q " + link,values["-FOLDER-"],))
             t.start()
 
     window.close()
