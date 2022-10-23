@@ -22,11 +22,18 @@ def main(link, path):
     videoresinfo = [] #Storing raw resolution info here
     rescode = [] #Storing video codes here
     resinfo = [] #Storing other info to show here
-    for i in os.popen("yt-dlp -F " + link).read().splitlines()[5:]:
+    for i in os.popen("yt-dlp -F " + link).read().splitlines():
         if "audio" not in i[:i.find('|')]:
             videoresinfo.append(i[:i.find('|')].split())
     for i in videoresinfo:
-        resinfo.append(i[2] + " " + i[1] + " " + i[3] + "FPS")
+        badstrings = ['---','[','ID']
+        if any(x in i[0] for x in badstrings) or 'mhtml' in i[1]:
+            #print("bad value: ",i)
+            continue
+        try:
+            resinfo.append(i[2] + " " + i[1] + " " + i[3] + "FPS")
+        except:
+            resinfo.append(i[2] + " " + i[1] + " ")
         rescode.append(i[0])
 
     jpg_data = requests.get(videoinfo['thumbnail']).content    
