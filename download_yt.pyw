@@ -19,27 +19,35 @@ def Download(cmd, path):
     #sys.exit(0)
 
 def main(link, path):
-    code = ''
-    if "shorts" in link:
-        code = link[link.find("shorts")+7:]
-    else:
-        code = link[link.find("?v=")+3:]
-    jpg_data = requests.get("https://i.ytimg.com/vi/"+code+"/maxresdefault.jpg").content        
+    videoinfo = json.loads(os.popen("yt-dlp -j " + link).read())
+    videoresinfo = [] #Storing raw resolution info here
+    rescode = [] #Storing video codes here
+    resinfo = [] #Storing other info to show here
+    for i in os.popen("yt-dlp -F " + link).read().splitlines()[5:]:
+        if "audio" not in i[:i.find('|')]:
+            videoresinfo.append(i[:i.find('|')].split())
+    for i in videoresinfo:
+        resinfo.append(i[2] + " " + i[1] + " " + i[3] + "FPS")
+        rescode.append(i[0])
+
+    jpg_data = requests.get(videoinfo['thumbnail']).content
     pil_image = Image.open(io.BytesIO(jpg_data))
     pil_image = pil_image.resize((480,270), resample=Image.Resampling.BICUBIC)
     png_bio = io.BytesIO()
     pil_image.save(png_bio, format="PNG")
     png_data = png_bio.getvalue()
-    videoinfo = json.loads(os.popen("yt-dlp -j " + code).read())
     
+    sg.theme('Black')
     elements = [
         [
             sg.Image(data=png_data, key="thumbnail", size=(480,270)),
         ],
         [sg.Text(videoinfo['title'])],
         [sg.Text('Folder'), sg.In(default_text=path,size=(25,1), enable_events=True ,key='-FOLDER-'), sg.FolderBrowse(initial_folder=path)],
+        [sg.Combo(resinfo, size=(25,1), default_value="Select Resolution", key='-LIST-')],
         [
-         sg.Button("Start"),
+         sg.Button("Video"),
+         sg.Button("Audio Only"),
          sg.Button("Exit")
         ],
         [
@@ -48,16 +56,23 @@ def main(link, path):
     ]
     layout = [[sg.Column(elements, element_justification='c')]] 
 
-    window = sg.Window("YouTube Downloader", layout, return_keyboard_events=True,)
+    window = sg.Window("YouTube Downloader", layout, return_keyboard_events=True, icon='C:/Users/ghosh/OneDrive/Documents/progams/yt-dlp-gui-downloader/Papirus-Team-Papirus-Apps-Youtube.ico')
 
 
     while True:
         event, values = window.read()
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
-        elif event == "Start":
+        elif event == "Video":
             print("Download Started, Please do not click start again...")
-            t = threading.Thread(target=Download,args=("yt-dlp --embed-subs --embed-metadata --progress --no-mtime --quiet " + code,values["-FOLDER-"],))
+            if (values['-LIST-'] == 'Select Resolution'):
+                t = threading.Thread(target=Download,args=("yt-dlp --embed-subs --embed-metadata --progress --no-mtime -q " + link,values["-FOLDER-"],))    
+            else:
+                t = threading.Thread(target=Download,args=("yt-dlp -f " + rescode[resinfo.index(values['-LIST-'])] + "+bestaudio --embed-subs --embed-metadata --progress --no-mtime -q " + link,values["-FOLDER-"],))
+            t.start()
+        elif event == "Audio Only":
+            print("Download Started, Please do not click start again...")
+            t = threading.Thread(target=Download,args=("yt-dlp -f bestaudio --embed-subs --embed-metadata --progress --no-mtime -q " + link,values["-FOLDER-"],))
             t.start()
 
     window.close()
