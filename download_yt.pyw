@@ -11,7 +11,7 @@ from PIL import Image, ImageTk
 
 def Download(cmd, path):
     os.chdir(path)
-    process = subprocess.Popen(cmd)
+    process = subprocess.Popen(cmd, shell=True)
     process.wait()
     print("Download Finished")
     #sys.exit(0)
